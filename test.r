@@ -20,14 +20,11 @@ library(factoextra)
 library(proxy)
 
 #* Import libreria di supporto
-setwd("C:/Users/fabbr/Desktop/Tesi/Codice")
+setwd("C:/Users/fabbr/Desktop/Tesi/Code")
 source("utility.r")
 
-#* Creazione palette
-myColors <- colorRampPalette(brewer.pal(7, "Accent"))(30)
-
 #* Import dei dati escludendo i tweet non in inglese e quelli non retweetati
-original_df <- read_csv("C:\\Users\\fabbr\\Desktop\\Tesi\\Codice\\dataset.csv") %>% filter(language == "en" & retweet == FALSE)
+original_df <- read_csv("C:\\Users\\fabbr\\Desktop\\Tesi\\Code\\dataset.csv") %>% filter(language == "en" & retweet == FALSE)
 
 #* Analisi hashtags
 
@@ -36,8 +33,8 @@ hdf <- cleanTesto(original_df$hashtags, hashtag = TRUE, mention = TRUE, numeri =
 hdf <- tibble(hashtags = hdf)
 hashtags <- hdf[!apply(hdf == "", 1, all),] %>% unnest_tokens(word, hashtags) %>% group_by(word) %>% summarise(n = n()) %>% arrange(desc(n))
 
-#bar plot hashtags
-hashtags[3:33, ] %>% filter(n >= 10) %>% ggplot(aes(y = reorder(word,n), x= n, fill=factor(n))) +
+#Bar plot hashtags
+hashtags[3:27, ] %>% filter(n >= 10) %>% ggplot(aes(y = reorder(word,n), x= n, fill=factor(n))) +
     geom_col() +
     labs(x = "Number of occurrences", y = NULL) +
     ggtitle("Hashtag Frequency") +
@@ -45,8 +42,7 @@ hashtags[3:33, ] %>% filter(n >= 10) %>% ggplot(aes(y = reorder(word,n), x= n, f
         # axis.text.x = element_text(angle = 90),
         plot.title = element_text(hjust = 0.5, size=15),
         axis.title = element_text(face="bold")) +
-    theme(legend.position = "none") +
-    scale_fill_manual(values = myColors)
+    theme(legend.position = "none")
 
 #* Pulizia dei testi
 cleaned_df <- cleanTesto(original_df$tweet, hashtag = TRUE, mention = TRUE, numeri = TRUE, punteggiatura = TRUE, minuscolo = TRUE) %>% iconv(to="UTF-8")
@@ -127,7 +123,7 @@ dfSLtdm <- data.frame(words=rownames(mSLtdm),mSLtdm,freq=rowSums(mSLtdm))
 rownames(dfSLtdm) <- NULL
 freqTF <- dfSLtdm %>%
   select(words,freq) %>%
-  top_n(n = 30,wt = freq) %>%
+  top_n(n = 25,wt = freq) %>%
   arrange(-freq)
 
 ggplot(freqTF,aes(x = reorder(words,freq),y=freq, fill=factor(freq)))+
@@ -139,7 +135,6 @@ ggplot(freqTF,aes(x = reorder(words,freq),y=freq, fill=factor(freq)))+
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     theme(axis.title.x = element_text(size = 11),
         plot.title = element_text(hjust = 0.5, size=15)) +
-    scale_fill_manual(values = myColors) +
     theme(legend.position = "none")
 
 # Analisi con ponderazione TF-IDF
@@ -149,7 +144,7 @@ dfSLtdmIDF <- data.frame(words=rownames(mSLtdmIDF),mSLtdmIDF,freq=rowSums(mSLtdm
 rownames(dfSLtdmIDF) <- NULL
 freqIDF <- dfSLtdmIDF %>%
   select(words,freq) %>%
-  top_n(30,freq) %>%
+  top_n(25,freq) %>%
   arrange(-freq)
 
 ggplot(freqIDF,aes(x = reorder(words,freq),y=freq, fill=factor(freq)))+
@@ -157,28 +152,12 @@ ggplot(freqIDF,aes(x = reorder(words,freq),y=freq, fill=factor(freq)))+
     xlab("")+ylab("TF-IDF")+
     coord_flip()+
     theme_light() +
-    scale_fill_manual(values = myColors)  +
     theme(legend.position = "none")
 
 #* Proseguimento con analisi basata su ponderazione TF
 
 #Store the lemmatized corpus in a data frame
 correct_texts <- correct_df$txtL
-
-# Split the text into individual tokens, remove stopwords, sort by descending count
-tokens <- tibble(text = correct_texts) %>%
-    unnest_tokens(word, text) %>%  # creates a single column containing all single words from the text tibble
-    anti_join(stop_words) %>%       # remove stopwords, it's a variable from the tidytext package
-    count(word, sort = TRUE)
-
-head(tokens, 30) %>% ggplot(aes(x = n, y= reorder(word,n), fill=factor(n))) +
-    geom_col() +
-    labs(x = "Number of occurrences", y = NULL) +
-    ggtitle("Word Frequency") +
-    theme(axis.title.x = element_text(size = 11),
-        plot.title = element_text(hjust = 0.5, size=15)) +
-    theme(legend.position = "none") +
-    scale_fill_manual(values = myColors)
 
 # Proseguo a fare lo stesso ma con i bigrammi
 bigrams <- tibble(text = correct_texts) %>%
@@ -192,21 +171,20 @@ bigrams_count <- bigrams %>%
     count() %>%
     arrange(desc(n))
 
-head(bigrams_count, 30) %>% ggplot(aes(x = n, y= reorder(bigram,n), fill=factor(n))) +
+head(bigrams_count, 25) %>% ggplot(aes(x = n, y= reorder(bigram,n), fill=factor(n))) +
     geom_col() +
     labs(x = "Number of occurrences", y = NULL) +
     ggtitle("Bigrams Frequency") +
     theme(axis.title.x = element_text(size = 11),
         plot.title = element_text(hjust = 0.5, size=15)) +
-    theme(legend.position = "none") +
-    scale_fill_manual(values = myColors)
+    theme(legend.position = "none")
 
 # Analyzing Bigrams into graphs
 bigrams_count <- bigrams %>%
     count(first, second, sort = TRUE)
 
 bigram_graph <- bigrams_count %>%
-  filter(n > 30) %>%
+  filter(n >35) %>%
   graph_from_data_frame()
 
 a <- grid::arrow(type = "closed", length = unit(.14, "inches"))
@@ -237,21 +215,20 @@ trigrams_count <- trigrams %>%
     count() %>%
     arrange(desc(n))
 
-head(trigrams_count, 30) %>% ggplot(aes(x = n, y= reorder(trigram,n), fill=factor(n))) +
+head(trigrams_count, 25) %>% ggplot(aes(x = n, y= reorder(trigram,n), fill=factor(n))) +
     geom_col() +
     labs(x = "Number of occurrences", y = NULL) +
     ggtitle("Trigrams Frequency") +
     theme(axis.title.x = element_text(size = 11),
         plot.title = element_text(hjust = 0.5, size=15)) +
-    theme(legend.position = "none") +
-    scale_fill_manual(values = myColors)
+    theme(legend.position = "none")
 
-# Analyzing Bigrams into graphs
+# Analyzing Trigrams into graphs
 trigrams_count <- trigrams %>%
     count(first, second, third, sort = TRUE)
 
 trigrams_graph <- trigrams_count %>%
-  filter(n > 20) %>%
+  filter(n > 25) %>%
   graph_from_data_frame()
 
 a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
@@ -276,7 +253,7 @@ fviz_dend(hhJ, k = 20,
           k_colors = brewer.pal(8,"Set2"),
           type = "phylogenic",
           repel = TRUE,
-          phylo_layout = "layout.gem") +  # in alternativa layout.auto, layout_with_lgl , ...
+          phylo_layout = "layout.gem") +
     ggtitle("Dendrogramma lemmi") +
     theme(axis.title.x = element_text(size = 11),
         plot.title = element_text(hjust = 0.5, size=15)) +
@@ -475,7 +452,7 @@ emotion_df %>%
     ggplot(aes(count, word, fill = sentiment)) +
     geom_col(show.legend = FALSE) +
     facet_wrap(~sentiment, scales = "free_y") +
-    labs(x = "Contribution to sentiment",
+    labs(x = "Contribution to emotion",
         y = NULL)
 
 # Quante parole diverse sono usate per ogni sentiment
@@ -486,13 +463,11 @@ sum_used_words_by_emotion <- emotion_df %>%
     mutate(percentage = round(count/sum(count)*100,2)) %>%
     mutate(pstring = paste(percentage, "%", sep=""))
 
-sum_used_words_by_emotion$sentiment
-
 #Create a bar chart
 ggplot(sum_used_words_by_emotion, aes(x=sentiment, y=count, text=pstring)) +
   geom_bar(stat="identity", fill=c("#00BE67", "#F8766D",  "#FF61CC", "#00A9FF", "#84B30F",  "#CD9600", "#00BFC4", "#C77CFF"))+
   theme_minimal() +xlab("Sentiment") +
-  ggtitle("Parole differenti usate per sentimento") +
+#   ggtitle("Parole differenti usate per sentimento") +
   theme(plot.title = element_text(hjust = 0.5))
 
 # Somma totale parole usate per ogni sentiment
@@ -506,7 +481,7 @@ sum_total_words_spent_by_emotion <- emotion_df %>%
 ggplot(sum_total_words_spent_by_emotion, aes(x=sentiment, y=count, text=pstring)) +
   geom_bar(stat="identity", fill=c("#00BE67", "#F8766D",  "#FF61CC", "#00A9FF", "#84B30F",  "#CD9600", "#00BFC4", "#C77CFF"))+
   theme_minimal() +xlab("Sentiment") +
-  ggtitle("Parole totali usate per sentimento") +
+#   ggtitle("Parole totali usate per sentimento") +
   theme(plot.title = element_text(hjust = 0.5))
 
 #* Word Clouds
@@ -526,7 +501,7 @@ tokens <- tail(tokens, -3)
 wordcloud(words = tokens$word, freq = tokens$n,
           min.freq = 1, max.words=250, random.order=FALSE, rot.per=0.35,
           colors=brewer.pal(8, "Dark2"))
-text(0.5,1,"Wordcloud dei token nei tweet in analisi",cex=1,font = 2)
+# text(0.5,1,"Wordcloud dei token nei tweet in analisi",cex=1,font = 2)
 
 # Conteggio dell'utilizzo delle parole piu comuni per sentimento
 sentiment_df <- tibble(text = wcdf) %>%
@@ -538,7 +513,6 @@ sentiment_df <- tibble(text = wcdf) %>%
     acast(word ~ sentiment, value.var = "n", fill = 0) %>%
     comparison.cloud(colors = c("brown2","darkgreen"),
                     max.words = 200)
-text(0.5,1,"Comparison wordcloud dei token per sentiment",cex=1,font = 2)
 
 emotion_df <- tibble(text = wcdf) %>%
     unnest_tokens(word, text) %>%
@@ -549,4 +523,4 @@ emotion_df <- tibble(text = wcdf) %>%
     acast(word ~ sentiment, value.var = "n", fill = 0) %>%
     comparison.cloud(colors = c("#F8766D", "#CD9600", "#84B30F", "#00BE67", "#00BFC4",  "#00A9FF", "#FF61CC", "#C77CFF"),
                     max.words = 200)
-text(0.5,1,"Comparison wordcloud dei token per emotion",cex=1,font = 2)
+# text(0.5,1,"Comparison wordcloud dei token per emotion",cex=1,font = 2)
