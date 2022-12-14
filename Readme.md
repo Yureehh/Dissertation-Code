@@ -1,8 +1,8 @@
-# SENTIMENT ANALYSIS: LA GUERRA RUSSO-UCRAINA SU TWITTER
+# SENTIMENT ANALYSIS: RUSSO-UKRANIAN WAR ON TWITTER
 
 ## Author: Juri Fabbri
 
-**This repository contains the source code for my bachelor thesis on Twitter Sentiment Analysis using R.**
+**This repository contains the source code for my bachelor degree disseration on Twitter Sentiment Analysis developed in R.**
 
 **Contents**:
 
